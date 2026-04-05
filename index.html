@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Adam's Supps</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #161a20;
+    --surface2: #1e242d;
+    --border: #272e3a;
+    --accent: #c8f135;
+    --accent2: #3bffc8;
+    --text: #f0f4f8;
+    --muted: #6b7788;
+    --done: #2a3520;
+    --done-border: #4a6030;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘DM Sans’, sans-serif;
+min-height: 100vh;
+padding: 0 0 60px;
+max-width: 480px;
+margin: 0 auto;
+}
+
+.header {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+padding: 20px 20px 14px;
+position: sticky;
+top: 0;
+z-index: 100;
+}
+
+.header-top {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+margin-bottom: 14px;
+}
+
+.plan-badge {
+display: inline-block;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 11px;
+letter-spacing: 2px;
+padding: 3px 10px;
+border-radius: 20px;
+margin-bottom: 4px;
+}
+.plan-badge.mod { background: rgba(200,241,53,0.15); color: var(–accent); border: 1px solid rgba(200,241,53,0.3); }
+.plan-badge.low { background: rgba(59,255,200,0.12); color: var(–accent2); border: 1px solid rgba(59,255,200,0.25); }
+
+.header h1 { font-family: ‘Bebas Neue’, sans-serif; font-size: 32px; letter-spacing: 1px; line-height: 1; }
+.day-info { font-size: 13px; color: var(–muted); margin-top: 2px; }
+
+.progress-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.progress-ring { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(–border); stroke-width: 4; }
+.ring-fg { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+.ring-count { font-family: ‘Bebas Neue’, sans-serif; font-size: 11px; color: var(–muted); letter-spacing: 1px; }
+
+.day-strip { display: flex; gap: 6px; overflow-x: auto; padding: 0 20px; margin-top: 14px; scrollbar-width: none; }
+.day-strip::-webkit-scrollbar { display: none; }
+
+.day-btn {
+flex-shrink: 0; background: var(–surface2); border: 1px solid var(–border);
+border-radius: 10px; padding: 7px 12px; cursor: pointer; transition: all 0.2s;
+text-align: center; min-width: 48px;
+}
+.day-btn:hover { border-color: var(–accent); }
+.day-btn.active.mod { background: rgba(200,241,53,0.12); border-color: var(–accent); }
+.day-btn.active.low { background: rgba(59,255,200,0.1); border-color: var(–accent2); }
+.day-btn .day-label { font-family: ‘Bebas Neue’, sans-serif; font-size: 14px; letter-spacing: 1px; display: block; }
+.day-btn .day-dot { width: 5px; height: 5px; border-radius: 50%; margin: 3px auto 0; }
+.day-btn.mod .day-dot { background: var(–accent); }
+.day-btn.low .day-dot { background: var(–accent2); }
+.day-btn:not(.active) .day-dot { background: var(–border); }
+
+.next-banner {
+margin: 14px 16px 0; background: var(–surface2); border: 1px solid var(–border);
+border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+}
+.next-banner.mod { border-left: 3px solid var(–accent); }
+.next-banner.low { border-left: 3px solid var(–accent2); }
+.next-banner.all-done { border-left: 3px solid #4a6030; opacity: 0.7; }
+.next-icon { font-size: 22px; flex-shrink: 0; }
+.next-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–muted); margin-bottom: 2px; }
+.next-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 19px; letter-spacing: 0.5px; line-height: 1; }
+.next-subtitle { font-size: 12px; color: var(–muted); margin-top: 2px; }
+
+.water-bar { margin: 12px 16px 0; background: var(–surface); border: 1px solid var(–border); border-radius: 14px; padding: 11px 14px; }
+.water-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(–muted); margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; }
+.water-goal { color: #60a5fa; font-family: ‘Bebas Neue’, sans-serif; font-size: 14px; letter-spacing: 1px; }
+.water-track { display: flex; gap: 5px; }
+.water-drop { flex: 1; height: 6px; border-radius: 3px; background: var(–border); cursor: pointer; transition: all 0.2s; }
+.water-drop.filled { background: #60a5fa; }
+
+.meals-wrap { padding: 14px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+
+.meal-card { background: var(–surface); border: 1px solid var(–border); border-radius: 16px; overflow: hidden; transition: opacity 0.3s; }
+.meal-card.completed { opacity: 0.5; }
+
+.meal-header { padding: 13px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.meal-icon { font-size: 19px; flex-shrink: 0; }
+.meal-titlewrap { flex: 1; }
+.meal-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 17px; letter-spacing: 0.5px; line-height: 1.1; }
+.meal-subtitle { font-size: 11px; color: var(–muted); margin-top: 1px; }
+
+.meal-status { display: flex; align-items: center; gap: 7px; }
+
+.status-chip { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.status-chip.pending { background: rgba(107,119,136,0.2); color: var(–muted); border: 1px solid var(–border); }
+.status-chip.food-only { background: rgba(107,119,136,0.1); color: var(–muted); border: 1px dashed var(–border); }
+.status-chip.done-chip { background: var(–done); color: #8bc34a; border: 1px solid var(–done-border); }
+.status-chip.next-chip.mod { background: rgba(200,241,53,0.15); color: var(–accent); border: 1px solid rgba(200,241,53,0.3); }
+.status-chip.next-chip.low { background: rgba(59,255,200,0.12); color: var(–accent2); border: 1px solid rgba(59,255,200,0.25); }
+
+.chevron { color: var(–muted); font-size: 11px; transition: transform 0.2s; flex-shrink: 0; }
+.meal-card.open .chevron { transform: rotate(180deg); }
+
+.meal-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(–border); animation: slideDown 0.2s ease; }
+.meal-card.open .meal-body { display: block; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–muted); margin: 12px 0 6px; padding-left: 2px; }
+
+.supp-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+.supp-item {
+display: flex; align-items: center; gap: 10px; padding: 9px 11px;
+background: var(–surface2); border-radius: 10px; border: 1px solid var(–border);
+cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+}
+.supp-item:active { transform: scale(0.98); }
+.supp-item.checked { background: var(–done); border-color: var(–done-border); }
+
+.supp-check {
+width: 21px; height: 21px; border-radius: 50%; border: 2px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0; transition: all 0.25s; font-size: 10px; color: transparent;
+}
+.supp-item.checked .supp-check { background: #6ab04c; border-color: #6ab04c; color: white; }
+
+.supp-name { flex: 1; font-size: 13px; font-weight: 500; transition: color 0.2s; line-height: 1.3; }
+.supp-item.checked .supp-name { color: var(–muted); text-decoration: line-through; text-decoration-color: #4a6030; }
+
+.supp-dose { font-size: 11px; color: var(–muted); background: var(–bg); padding: 2px 7px; border-radius: 7px; font-weight: 500; white-space: nowrap; }
+
+.food-detail { margin-top: 0; background: rgba(255,255,255,0.025); border: 1px solid var(–border); border-radius: 10px; overflow: hidden; }
+.food-detail-header { padding: 7px 12px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(–muted); border-bottom: 1px solid var(–border); display: flex; justify-content: space-between; align-items: center; }
+.food-macros { color: var(–text); font-family: ‘Bebas Neue’, sans-serif; font-size: 12px; letter-spacing: 0.5px; }
+.food-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 12px; font-size: 12px; }
+.food-row-name { color: var(–text); }
+.food-row-qty { color: var(–muted); }
+
+.meal-note { font-size: 11px; color: var(–muted); margin-top: 10px; padding: 7px 10px; background: rgba(255,255,255,0.03); border-radius: 8px; letter-spacing: 0.3px; line-height: 1.5; }
+
+.mark-all-btn {
+width: 100%; margin-top: 10px; padding: 9px; border-radius: 10px;
+border: 1px dashed var(–border); background: transparent; color: var(–muted);
+font-family: ‘DM Sans’, sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s;
+-webkit-tap-highlight-color: transparent;
+}
+.mark-all-btn:hover { border-color: var(–accent); color: var(–accent); }
+
+.all-done-msg { margin: 16px 0 0; text-align: center; padding: 24px; background: var(–surface); border: 1px solid var(–done-border); border-radius: 16px; }
+.all-done-msg .emoji { font-size: 38px; margin-bottom: 8px; }
+.all-done-msg h3 { font-family: ‘Bebas Neue’, sans-serif; font-size: 26px; color: var(–accent); letter-spacing: 1px; }
+.all-done-msg p { font-size: 13px; color: var(–muted); margin-top: 4px; }
+
+.reset-btn { margin: 10px auto 0; display: block; background: transparent; border: 1px solid var(–border); color: var(–muted); font-family: ‘DM Sans’, sans-serif; font-size: 12px; padding: 6px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+.reset-btn:hover { border-color: var(–muted); color: var(–text); }
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="plan-badge" id="planBadge">MOD PLAN</div>
+      <h1>SUPPLEMENTS</h1>
+      <div class="day-info" id="dayInfo"></div>
+    </div>
+    <div class="progress-ring-wrap">
+      <svg class="progress-ring" width="52" height="52" viewBox="0 0 52 52">
+        <circle class="ring-bg" cx="26" cy="26" r="22"/>
+        <circle class="ring-fg" id="ringFg" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2"/>
+      </svg>
+      <div class="ring-count" id="ringCount">0/0</div>
+    </div>
+  </div>
+  <div class="day-strip" id="dayStrip"></div>
+</div>
+
+<div id="nextBanner"></div>
+<div id="waterSection"></div>
+<div id="mealsWrap" class="meals-wrap"></div>
+
+<script>
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const FULL_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function getPlanType(d) { return [1,3,5].includes(d) ? 'mod' : 'low'; }
+
+const PLANS = {
+  mod: {
+    label: 'MOD PLAN',
+    meals: [
+      {
+        id: 'am', icon: '🌅', title: 'AM SUPPS', subtitle: null,
+        note: 'Drink with water every morning',
+        supps: [
+          { name: 'Alien Greens', dose: '1 scoop' },
+          { name: 'Alien Glutamine', dose: '1 scoop' },
+        ],
+        foods: null, macros: null
+      },
+      {
+        id: 'meal1', icon: '🥣', title: 'MEAL 1', subtitle: 'Protein Yoghurt Bowl',
+        note: 'Mix protein into yoghurt — top with fruit & PB · 1L water',
+        supps: [
+          { name: 'Bio Curcumin', dose: '500mg' },
+          { name: 'Fish Oil', dose: '1000mg' },
+          { name: 'Evening Primrose', dose: '1000mg' },
+          { name: 'Vitamin C', dose: '2000mg' },
+          { name: 'CLA', dose: '1000mg' },
+          { name: 'Complex B', dose: '1 cap' },
+          { name: 'Vitamin D', dose: '5,000iu' },
+          { name: 'CoQ10', dose: '1 cap' },
+        ],
+        foods: [
+          { name: 'Alien NY Choc Chip Cookie Protein', qty: '40g' },
+          { name: 'Chobani No Fat Yoghurt', qty: '200g' },
+          { name: 'Banana', qty: '100g' },
+          { name: 'Frozen Mixed Berries', qty: '100g' },
+          { name: 'Peanut Butter (smooth)', qty: '15g' },
+        ],
+        macros: 'PRO 40g · CARB 48g · FAT 14g · 478 cal'
+      },
+      {
+        id: 'meal2', icon: '🍗', title: 'MEAL 2', subtitle: 'Chicken & Rice',
+        note: 'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps: [],
+        foods: [
+          { name: 'Chicken Breast (raw weight)', qty: '200g' },
+          { name: 'Basmati Rice (raw)', qty: '60g' },
+          { name: 'Stir Fry Mixed Vegetables', qty: '150g' },
+          { name: 'Olive Oil (cold pressed)', qty: '10ml' },
+        ],
+        macros: 'PRO 52g · CARB 52g · FAT 12g · 528 cal'
+      },
+      {
+        id: 'meal3', icon: '🥩', title: 'MEAL 3', subtitle: 'Steak & Potato',
+        note: 'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps: [],
+        foods: [
+          { name: 'Lean Beef Rump (no fat, raw)', qty: '200g' },
+          { name: 'White Potato', qty: '250g' },
+          { name: 'Mixed Greens', qty: '200g' },
+          { name: 'Macadamia Nut Oil', qty: '10ml' },
+        ],
+        macros: 'PRO 52g · CARB 38g · FAT 16g · 504 cal'
+      },
+      {
+        id: 'intra', icon: '💪', title: 'INTRA WORKOUT', subtitle: null,
+        note: 'Mix with 1L water + 2g pink salt',
+        supps: [
+          { name: 'Alien RISE EAA/BCAA', dose: '1 scoop' },
+          { name: 'Alien Creatine', dose: '1 scoop' },
+        ],
+        foods: null, macros: 'PRO 0g · CARB 0g · FAT 0g · 0 cal'
+      },
+      {
+        id: 'post', icon: '⚡', title: 'POST WORKOUT', subtitle: null,
+        note: 'Shake with water — pour over cereal · 500ml water',
+        supps: [
+          { name: 'Vitamin C', dose: '2000mg' },
+        ],
+        foods: [
+          { name: 'Alien NY Choc Chip Cookie Protein', qty: '50g' },
+          { name: 'Cocoa Bombs GF Cereal', qty: '50g' },
+        ],
+        macros: 'PRO 37g · CARB 42g · FAT 7g · 379 cal'
+      },
+      {
+        id: 'dessert', icon: '🍓', title: 'DESSERT', subtitle: null,
+        note: 'Enjoy every night!!',
+        supps: [
+          { name: 'Zinc Picolinate', dose: '30mg' },
+          { name: 'Bio Curcumin', dose: '500mg' },
+          { name: 'Fish Oil', dose: '1000mg' },
+          { name: 'Evening Primrose', dose: '1000mg' },
+        ],
+        foods: [
+          { name: 'Strawberries', qty: '150g' },
+          { name: '78% Lindt Dark Chocolate', qty: '2 squares' },
+        ],
+        macros: 'PRO 2g · CARB 16g · FAT 6g · 126 cal'
+      },
+    ]
+  },
+
+  low: {
+    label: 'LOW PLAN',
+    meals: [
+      {
+        id: 'am', icon: '🌅', title: 'AM SUPPS', subtitle: null,
+        note: 'Drink with water every morning',
+        supps: [
+          { name: 'Alien Greens', dose: '1 scoop' },
+          { name: 'Alien Glutamine', dose: '1 scoop' },
+          { name: 'Alien Creatine', dose: '1 scoop' },
+        ],
+        foods: null, macros: null
+      },
+      {
+        id: 'meal1', icon: '🥣', title: 'MEAL 1', subtitle: 'Protein Yoghurt Bowl',
+        note: 'Mix protein into yoghurt — top with berries & PB · 1L water',
+        supps: [
+          { name: 'Bio Curcumin', dose: '500mg' },
+          { name: 'Fish Oil', dose: '1000mg' },
+          { name: 'Evening Primrose', dose: '1000mg' },
+          { name: 'Vitamin C', dose: '2000mg' },
+          { name: 'CLA', dose: '1000mg' },
+          { name: 'Complex B', dose: '1 cap' },
+          { name: 'Vitamin D', dose: '5,000iu' },
+          { name: 'CoQ10', dose: '1 cap' },
+        ],
+        foods: [
+          { name: 'Alien NY Choc Chip Cookie Protein', qty: '40g' },
+          { name: 'Chobani No Fat Yoghurt', qty: '200g' },
+          { name: 'Frozen Mixed Berries', qty: '150g' },
+          { name: 'Peanut Butter (smooth)', qty: '20g' },
+        ],
+        macros: 'PRO 40g · CARB 28g · FAT 16g · 412 cal'
+      },
+      {
+        id: 'meal2', icon: '🍗', title: 'MEAL 2', subtitle: 'Chicken & Rice',
+        note: 'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps: [],
+        foods: [
+          { name: 'Chicken Breast (raw weight)', qty: '200g' },
+          { name: 'Basmati Rice (raw)', qty: '40g' },
+          { name: 'Stir Fry Mixed Vegetables', qty: '150g' },
+          { name: 'Olive Oil (cold pressed)', qty: '10ml' },
+        ],
+        macros: 'PRO 52g · CARB 38g · FAT 12g · 468 cal'
+      },
+      {
+        id: 'meal3', icon: '🥩', title: 'MEAL 3', subtitle: 'Steak & Sweet Potato',
+        note: 'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps: [],
+        foods: [
+          { name: 'Lean Beef Rump (no fat, raw)', qty: '200g' },
+          { name: 'Sweet Potato', qty: '200g' },
+          { name: 'Mixed Greens', qty: '200g' },
+          { name: 'Macadamia Nut Oil', qty: '10ml' },
+        ],
+        macros: 'PRO 52g · CARB 35g · FAT 18g · 510 cal'
+      },
+      {
+        id: 'snack', icon: '🥤', title: 'SNACK', subtitle: 'Cookie Shake',
+        note: 'Shake with water — have anytime · 1L water',
+        supps: [
+          { name: 'Vitamin C', dose: '2000mg' },
+        ],
+        foods: [
+          { name: 'Alien NY Choc Chip Cookie Protein', qty: '50g' },
+        ],
+        macros: 'PRO 29g · CARB 11g · FAT 6g · 210 cal'
+      },
+      {
+        id: 'dessert', icon: '🍓', title: 'DESSERT', subtitle: null,
+        note: 'Enjoy every night!!',
+        supps: [
+          { name: 'Zinc Picolinate', dose: '30mg' },
+          { name: 'Bio Curcumin', dose: '500mg' },
+          { name: 'Fish Oil', dose: '1000mg' },
+          { name: 'Evening Primrose', dose: '1000mg' },
+        ],
+        foods: [
+          { name: 'Strawberries', qty: '150g' },
+          { name: '78% Lindt Dark Chocolate', qty: '2 squares' },
+        ],
+        macros: 'PRO 2g · CARB 16g · FAT 6g · 126 cal'
+      },
+    ]
+  }
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let selectedDay = new Date().getDay();
+function storageKey(d) { return `supps3_${d}`; }
+function waterKey(d) { return `water3_${d}`; }
+function loadState(d) { try { return JSON.parse(localStorage.getItem(storageKey(d))) || {}; } catch { return {}; } }
+function saveState(d, s) { localStorage.setItem(storageKey(d), JSON.stringify(s)); }
+function loadWater(d) { try { return parseInt(localStorage.getItem(waterKey(d))) || 0; } catch { return 0; } }
+function saveWater(d, v) { localStorage.setItem(waterKey(d), v); }
+function getSuppKey(d, mealId, i) { return `${d}-${mealId}-${i}`; }
+
+function getAllSuppCount(planType) {
+  return PLANS[planType].meals.reduce((a, m) => a + m.supps.length, 0);
+}
+function getDoneCount(d, planType) {
+  const state = loadState(d);
+  return PLANS[planType].meals.reduce((a, m) =>
+    a + m.supps.filter((_, i) => state[getSuppKey(d, m.id, i)]).length, 0);
+}
+function getNextMeal(d, planType) {
+  const state = loadState(d);
+  for (const m of PLANS[planType].meals) {
+    if (m.supps.length === 0) continue;
+    if (!m.supps.every((_, i) => state[getSuppKey(d, m.id, i)])) return m;
+  }
+  return null;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderDayStrip() {
+  const today = new Date().getDay();
+  const strip = document.getElementById('dayStrip');
+  strip.innerHTML = '';
+  for (let offset = -1; offset <= 5; offset++) {
+    const dayIdx = ((today + offset) % 7 + 7) % 7;
+    const plan = getPlanType(dayIdx);
+    const btn = document.createElement('div');
+    btn.className = `day-btn ${plan}${dayIdx === selectedDay ? ' active' : ''}`;
+    const label = offset === -1 ? 'YEST' : offset === 0 ? 'TODAY' : offset === 1 ? 'TMW' : DAYS[dayIdx];
+    btn.innerHTML = `<span class="day-label">${label}</span><div class="day-dot"></div>`;
+    btn.onclick = () => { selectedDay = dayIdx; render(); };
+    strip.appendChild(btn);
+  }
+}
+
+function renderHeader() {
+  const plan = getPlanType(selectedDay);
+  const today = new Date().getDay();
+  document.getElementById('planBadge').className = `plan-badge ${plan}`;
+  document.getElementById('planBadge').textContent = PLANS[plan].label;
+  const offset = ((selectedDay - today + 7) % 7);
+  const suffix = offset === 0 ? ' · Today' : offset === 1 ? ' · Tomorrow' : offset === 6 ? ' · Yesterday' : '';
+  document.getElementById('dayInfo').textContent = FULL_DAYS[selectedDay] + suffix;
+  const total = getAllSuppCount(plan);
+  const done = getDoneCount(selectedDay, plan);
+  const circumference = 138.2;
+  const ring = document.getElementById('ringFg');
+  ring.style.strokeDashoffset = total ? circumference - (done / total) * circumference : circumference;
+  ring.style.stroke = plan === 'mod' ? '#c8f135' : '#3bffc8';
+  document.getElementById('ringCount').textContent = `${done}/${total}`;
+}
+
+function renderNextBanner() {
+  const plan = getPlanType(selectedDay);
+  const next = getNextMeal(selectedDay, plan);
+  const total = getAllSuppCount(plan);
+  const done = getDoneCount(selectedDay, plan);
+  const icons = { am:'🌅', meal1:'🥣', meal2:'🍗', meal3:'🥩', intra:'💪', post:'⚡', snack:'🥤', dessert:'🍓' };
+  let html;
+  if (!next) {
+    html = `<div class="next-banner all-done"><div class="next-icon">✅</div><div>
+      <div class="next-label">Status</div>
+      <div class="next-title">ALL DONE TODAY</div>
+      <div class="next-subtitle">Every supplement taken · ${total}/${total}</div>
+    </div></div>`;
+  } else {
+    html = `<div class="next-banner ${plan}"><div class="next-icon">${icons[next.id]||'💊'}</div><div>
+      <div class="next-label">Next Up</div>
+      <div class="next-title">${next.title}${next.subtitle ? ' — '+next.subtitle : ''}</div>
+      <div class="next-subtitle">${next.supps.length} supplement${next.supps.length>1?'s':''} · ${done}/${total} done today</div>
+    </div></div>`;
+  }
+  document.getElementById('nextBanner').innerHTML = html;
+}
+
+function renderWater() {
+  const litres = loadWater(selectedDay);
+  const drops = Array.from({length:4},(_,i) =>
+    `<div class="water-drop${i<litres?' filled':''}" onclick="toggleWater(${i})"></div>`).join('');
+  document.getElementById('waterSection').innerHTML = `
+    <div class="water-bar">
+      <div class="water-label"><span>💧 WATER INTAKE</span><span class="water-goal">${litres}L / 4L</span></div>
+      <div class="water-track">${drops}</div>
+    </div>`;
+}
+
+function renderMeals() {
+  const plan = getPlanType(selectedDay);
+  const state = loadState(selectedDay);
+  const next = getNextMeal(selectedDay, plan);
+  const total = getAllSuppCount(plan);
+  const done = getDoneCount(selectedDay, plan);
+  const wrap = document.getElementById('mealsWrap');
+
+  let html = '';
+
+  PLANS[plan].meals.forEach(meal => {
+    const hasSuppable = meal.supps.length > 0;
+    const mealDone = hasSuppable && meal.supps.every((_,i) => state[getSuppKey(selectedDay, meal.id, i)]);
+    const isNext = next && next.id === meal.id;
+    const isOpen = isNext;
+
+    let statusClass, statusText;
+    if (!hasSuppable)      { statusClass = 'food-only'; statusText = 'FOOD ONLY'; }
+    else if (mealDone)     { statusClass = 'done-chip'; statusText = '✓ DONE'; }
+    else if (isNext)       { statusClass = `next-chip ${plan}`; statusText = 'NEXT UP'; }
+    else                   { statusClass = 'pending'; statusText = 'PENDING'; }
+
+    // Supps
+    let suppsHtml = '';
+    if (meal.supps.length > 0) {
+      const rows = meal.supps.map((s, i) => {
+        const key = getSuppKey(selectedDay, meal.id, i);
+        const checked = state[key] ? 'checked' : '';
+        return `<li class="supp-item ${checked}" onclick="toggleSupp('${meal.id}',${i})">
+          <div class="supp-check">${checked ? '✓' : ''}</div>
+          <div class="supp-name">${s.name}</div>
+          <div class="supp-dose">${s.dose}</div>
+        </li>`;
+      }).join('');
+      suppsHtml = `<div class="section-label">Supplements</div><ul class="supp-list">${rows}</ul>`;
+    }
+
+    // Foods
+    let foodsHtml = '';
+    if (meal.foods && meal.foods.length > 0) {
+      const rows = meal.foods.map(f =>
+        `<div class="food-row"><span class="food-row-name">${f.name}</span><span class="food-row-qty">${f.qty}</span></div>`
+      ).join('');
+      const macroLine = meal.macros ? `<span class="food-macros">${meal.macros}</span>` : '';
+      foodsHtml = `<div class="section-label">Ingredients</div>
+        <div class="food-detail">
+          <div class="food-detail-header"><span>FOODS</span>${macroLine}</div>
+          <div>${rows}</div>
+        </div>`;
+    } else if (meal.macros) {
+      foodsHtml = `<div class="meal-note" style="margin-top:10px">📊 ${meal.macros}</div>`;
+    }
+
+    const markAllBtn = hasSuppable && !mealDone
+      ? `<button class="mark-all-btn" onclick="markAll('${meal.id}')">Mark all supplements as taken</button>`
+      : '';
+
+    html += `<div class="meal-card${mealDone?' completed':''}${isOpen?' open':''}" id="card-${meal.id}">
+      <div class="meal-header" onclick="toggleCard('${meal.id}')">
+        <div class="meal-icon">${meal.icon}</div>
+        <div class="meal-titlewrap">
+          <div class="meal-title">${meal.title}</div>
+          ${meal.subtitle ? `<div class="meal-subtitle">${meal.subtitle}</div>` : ''}
+        </div>
+        <div class="meal-status">
+          <div class="status-chip ${statusClass}">${statusText}</div>
+          <div class="chevron">▾</div>
+        </div>
+      </div>
+      <div class="meal-body">
+        ${suppsHtml}
+        ${foodsHtml}
+        ${meal.note ? `<div class="meal-note">📌 ${meal.note}</div>` : ''}
+        ${markAllBtn}
+      </div>
+    </div>`;
+  });
+
+  if (total > 0 && done === total) {
+    html += `<div class="all-done-msg">
+      <div class="emoji">🎯</div>
+      <h3>CRUSHED IT!</h3>
+      <p>All supplements taken for ${FULL_DAYS[selectedDay]}</p>
+      <button class="reset-btn" onclick="resetDay()">Reset day</button>
+    </div>`;
+  }
+
+  wrap.innerHTML = html;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+window.toggleCard = id => { document.getElementById(`card-${id}`).classList.toggle('open'); };
+window.toggleSupp = (mealId, i) => {
+  const state = loadState(selectedDay);
+  const key = getSuppKey(selectedDay, mealId, i);
+  state[key] = !state[key];
+  saveState(selectedDay, state);
+  render();
+};
+window.markAll = mealId => {
+  const plan = getPlanType(selectedDay);
+  const meal = PLANS[plan].meals.find(m => m.id === mealId);
+  const state = loadState(selectedDay);
+  meal.supps.forEach((_, i) => { state[getSuppKey(selectedDay, mealId, i)] = true; });
+  saveState(selectedDay, state);
+  render();
+};
+window.toggleWater = i => {
+  const cur = loadWater(selectedDay);
+  saveWater(selectedDay, cur === i + 1 ? i : i + 1);
+  renderWater();
+};
+window.resetDay = () => { saveState(selectedDay, {}); render(); };
+
+function render() {
+  renderDayStrip();
+  renderHeader();
+  renderNextBanner();
+  renderWater();
+  renderMeals();
+}
+
+render();
+</script>
+
+</body>
+</html>
