@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Adam's Supps</title>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #161a20;
+    --surface2: #1e242d;
+    --border: #272e3a;
+    --accent: #c8f135;
+    --accent2: #3bffc8;
+    --text: #f0f4f8;
+    --muted: #6b7788;
+    --done: #2a3520;
+    --done-border: #4a6030;
+    --font-display: -apple-system-headline, "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-body: -apple-system, "SF Pro Text", BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    padding: 0 0 60px;
+    max-width: 480px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+
+  .plan-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 4px 11px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+  .plan-badge.mod { background: rgba(200,241,53,0.15); color: var(--accent); border: 1px solid rgba(200,241,53,0.35); }
+  .plan-badge.low { background: rgba(59,255,200,0.12); color: var(--accent2); border: 1px solid rgba(59,255,200,0.3); }
+
+  .header h1 {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .day-info { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+
+  /* Ring */
+  .progress-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 4px; }
+  .progress-ring { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
+  .ring-fg { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+  .ring-count { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; }
+
+  /* Day strip */
+  .day-strip { display: flex; gap: 6px; overflow-x: auto; padding: 0 20px; margin-top: 14px; scrollbar-width: none; }
+  .day-strip::-webkit-scrollbar { display: none; }
+  .day-btn {
+    flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 7px 12px; cursor: pointer; transition: all 0.2s;
+    text-align: center; min-width: 52px;
+  }
+  .day-btn .day-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; display: block; color: var(--muted); }
+  .day-btn .day-dot { width: 5px; height: 5px; border-radius: 50%; margin: 4px auto 0; background: var(--border); }
+  .day-btn.active .day-label { color: var(--text); }
+  .day-btn.active.mod { background: rgba(200,241,53,0.12); border-color: var(--accent); }
+  .day-btn.active.mod .day-dot { background: var(--accent); }
+  .day-btn.active.low { background: rgba(59,255,200,0.1); border-color: var(--accent2); }
+  .day-btn.active.low .day-dot { background: var(--accent2); }
+
+  /* ── NEXT BANNER ── */
+  .next-banner {
+    margin: 14px 16px 0; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 14px; display: flex; align-items: center; gap: 13px;
+  }
+  .next-banner.mod { border-left: 3px solid var(--accent); }
+  .next-banner.low { border-left: 3px solid var(--accent2); }
+  .next-banner.all-done { border-left: 3px solid #4a6030; opacity: 0.75; }
+  .next-icon { font-size: 24px; flex-shrink: 0; }
+  .next-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .next-title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; line-height: 1; color: var(--text); }
+  .next-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* ── WATER ── */
+  .water-bar { margin: 12px 16px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+  .water-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .water-goal { color: #60a5fa; font-size: 14px; font-weight: 800; letter-spacing: 0; }
+  .water-track { display: flex; gap: 6px; }
+  .water-drop { flex: 1; height: 7px; border-radius: 4px; background: var(--border); cursor: pointer; transition: all 0.25s; }
+  .water-drop.filled { background: #60a5fa; }
+
+  /* ── MEALS ── */
+  .meals-wrap { padding: 14px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+
+  .meal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: opacity 0.3s; }
+  .meal-card.completed { opacity: 0.45; }
+
+  .meal-header {
+    padding: 13px 14px; display: flex; align-items: center; gap: 11px;
+    cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .meal-icon { font-size: 20px; flex-shrink: 0; }
+  .meal-titlewrap { flex: 1; min-width: 0; }
+  .meal-title { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); }
+  .meal-subtitle { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .meal-status { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .status-chip {
+    font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 20px; white-space: nowrap;
+  }
+  .status-chip.pending { background: rgba(107,119,136,0.2); color: var(--muted); border: 1px solid var(--border); }
+  .status-chip.food-only { background: rgba(107,119,136,0.1); color: var(--muted); border: 1px dashed var(--border); }
+  .status-chip.done-chip { background: var(--done); color: #8bc34a; border: 1px solid var(--done-border); }
+  .status-chip.next-chip.mod { background: rgba(200,241,53,0.15); color: var(--accent); border: 1px solid rgba(200,241,53,0.35); }
+  .status-chip.next-chip.low { background: rgba(59,255,200,0.12); color: var(--accent2); border: 1px solid rgba(59,255,200,0.3); }
+
+  .chevron { color: var(--muted); font-size: 11px; transition: transform 0.2s; }
+  .meal-card.open .chevron { transform: rotate(180deg); }
+
+  .meal-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .meal-card.open .meal-body { display: block; animation: slideDown 0.18s ease; }
+
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 12px 0 7px; }
+
+  .supp-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .supp-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--surface2); border-radius: 10px; border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+  }
+  .supp-item:active { transform: scale(0.98); opacity: 0.8; }
+  .supp-item.checked { background: var(--done); border-color: var(--done-border); }
+
+  .supp-check {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s; font-size: 11px; color: transparent; font-weight: 700;
+  }
+  .supp-item.checked .supp-check { background: #6ab04c; border-color: #6ab04c; color: white; }
+
+  .supp-name { flex: 1; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .supp-item.checked .supp-name { color: var(--muted); text-decoration: line-through; text-decoration-color: #4a6030; }
+
+  .supp-dose { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--bg); padding: 2px 8px; border-radius: 7px; white-space: nowrap; }
+
+  .food-detail { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .food-detail-header { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .food-detail-header span { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+  .food-macros { font-size: 11px !important; font-weight: 600 !important; color: var(--text) !important; letter-spacing: 0 !important; }
+  .food-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; font-size: 12px; }
+  .food-row-name { color: var(--text); }
+  .food-row-qty { color: var(--muted); font-weight: 500; }
+
+  .meal-note { font-size: 11px; color: var(--muted); margin-top: 10px; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 8px; line-height: 1.5; }
+
+  .mark-all-btn {
+    width: 100%; margin-top: 10px; padding: 10px; border-radius: 10px;
+    border: 1px dashed var(--border); background: transparent; color: var(--muted);
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+  }
+  .mark-all-btn:active { border-color: var(--accent); color: var(--accent); }
+
+  /* All done */
+  .all-done-msg { margin: 16px 0 0; text-align: center; padding: 28px 20px; background: var(--surface); border: 1px solid var(--done-border); border-radius: 16px; }
+  .all-done-msg .emoji { font-size: 42px; margin-bottom: 10px; display: block; }
+  .all-done-msg h3 { font-size: 28px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+  .all-done-msg p { font-size: 13px; color: var(--muted); margin-top: 5px; }
+  .reset-btn { margin: 12px auto 0; display: block; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--font-body); font-size: 12px; padding: 6px 18px; border-radius: 20px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="plan-badge" id="planBadge"></div>
+      <h1>SUPPLEMENTS</h1>
+      <div class="day-info" id="dayInfo"></div>
+    </div>
+    <div class="progress-ring-wrap">
+      <svg class="progress-ring" width="54" height="54" viewBox="0 0 54 54">
+        <circle class="ring-bg" cx="27" cy="27" r="23"/>
+        <circle class="ring-fg" id="ringFg" cx="27" cy="27" r="23" stroke-dasharray="144.5" stroke-dashoffset="144.5"/>
+      </svg>
+      <div class="ring-count" id="ringCount">0/0</div>
+    </div>
+  </div>
+  <div class="day-strip" id="dayStrip"></div>
+</div>
+
+<div id="nextBanner"></div>
+<div id="waterSection"></div>
+<div id="mealsWrap" class="meals-wrap"></div>
+
+<script>
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const FULL_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MOD_DAYS = [1,3,5];
+function getPlan(d) { return MOD_DAYS.includes(d) ? 'mod' : 'low'; }
+
+const PLANS = {
+  mod: {
+    label: 'MOD PLAN',
+    meals: [
+      {
+        id:'am', icon:'🌅', title:'AM Supps', subtitle:null,
+        note:'Drink with water every morning',
+        supps:[{name:'Alien Greens',dose:'1 scoop'},{name:'Alien Glutamine',dose:'1 scoop'}],
+        foods:null, macros:null
+      },
+      {
+        id:'meal1', icon:'🥣', title:'Meal 1', subtitle:'Protein Yoghurt Bowl',
+        note:'Mix protein into yoghurt — top with fruit & PB · 1L water',
+        supps:[
+          {name:'Bio Curcumin',dose:'500mg'},{name:'Fish Oil',dose:'1000mg'},
+          {name:'Evening Primrose',dose:'1000mg'},{name:'Vitamin C',dose:'2000mg'},
+          {name:'CLA',dose:'1000mg'},{name:'Complex B',dose:'1 cap'},
+          {name:'Vitamin D',dose:'5,000iu'},{name:'CoQ10',dose:'1 cap'},
+        ],
+        foods:[
+          {name:'Alien NY Choc Chip Cookie Protein',qty:'40g'},
+          {name:'Chobani No Fat Yoghurt',qty:'200g'},
+          {name:'Banana',qty:'100g'},
+          {name:'Frozen Mixed Berries',qty:'100g'},
+          {name:'Peanut Butter (smooth)',qty:'15g'},
+        ],
+        macros:'PRO 40g · CARB 48g · FAT 14g · 478 cal'
+      },
+      {
+        id:'meal2', icon:'🍗', title:'Meal 2', subtitle:'Chicken & Rice',
+        note:'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps:[],
+        foods:[
+          {name:'Chicken Breast (raw weight)',qty:'200g'},
+          {name:'Basmati Rice (raw)',qty:'60g'},
+          {name:'Stir Fry Mixed Vegetables',qty:'150g'},
+          {name:'Olive Oil (cold pressed)',qty:'10ml'},
+        ],
+        macros:'PRO 52g · CARB 52g · FAT 12g · 528 cal'
+      },
+      {
+        id:'meal3', icon:'🥩', title:'Meal 3', subtitle:'Steak & Potato',
+        note:'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps:[],
+        foods:[
+          {name:'Lean Beef Rump (no fat, raw)',qty:'200g'},
+          {name:'White Potato',qty:'250g'},
+          {name:'Mixed Greens',qty:'200g'},
+          {name:'Macadamia Nut Oil',qty:'10ml'},
+        ],
+        macros:'PRO 52g · CARB 38g · FAT 16g · 504 cal'
+      },
+      {
+        id:'intra', icon:'💪', title:'Intra Workout', subtitle:null,
+        note:'Mix with 1L water + 2g pink salt',
+        supps:[{name:'Alien RISE EAA/BCAA',dose:'1 scoop'},{name:'Alien Creatine',dose:'1 scoop'}],
+        foods:null, macros:'PRO 0g · CARB 0g · FAT 0g · 0 cal'
+      },
+      {
+        id:'post', icon:'⚡', title:'Post Workout', subtitle:null,
+        note:'Shake with water — pour over cereal · 500ml water',
+        supps:[{name:'Vitamin C',dose:'2000mg'}],
+        foods:[
+          {name:'Alien NY Choc Chip Cookie Protein',qty:'50g'},
+          {name:'Cocoa Bombs GF Cereal',qty:'50g'},
+        ],
+        macros:'PRO 37g · CARB 42g · FAT 7g · 379 cal'
+      },
+      {
+        id:'dessert', icon:'🍓', title:'Dessert', subtitle:null,
+        note:'Enjoy every night!!',
+        supps:[
+          {name:'Zinc Picolinate',dose:'30mg'},{name:'Bio Curcumin',dose:'500mg'},
+          {name:'Fish Oil',dose:'1000mg'},{name:'Evening Primrose',dose:'1000mg'},
+        ],
+        foods:[
+          {name:'Strawberries',qty:'150g'},
+          {name:'78% Lindt Dark Chocolate',qty:'2 squares'},
+        ],
+        macros:'PRO 2g · CARB 16g · FAT 6g · 126 cal'
+      },
+    ]
+  },
+  low: {
+    label: 'LOW PLAN',
+    meals: [
+      {
+        id:'am', icon:'🌅', title:'AM Supps', subtitle:null,
+        note:'Drink with water every morning',
+        supps:[{name:'Alien Greens',dose:'1 scoop'},{name:'Alien Glutamine',dose:'1 scoop'},{name:'Alien Creatine',dose:'1 scoop'}],
+        foods:null, macros:null
+      },
+      {
+        id:'meal1', icon:'🥣', title:'Meal 1', subtitle:'Protein Yoghurt Bowl',
+        note:'Mix protein into yoghurt — top with berries & PB · 1L water',
+        supps:[
+          {name:'Bio Curcumin',dose:'500mg'},{name:'Fish Oil',dose:'1000mg'},
+          {name:'Evening Primrose',dose:'1000mg'},{name:'Vitamin C',dose:'2000mg'},
+          {name:'CLA',dose:'1000mg'},{name:'Complex B',dose:'1 cap'},
+          {name:'Vitamin D',dose:'5,000iu'},{name:'CoQ10',dose:'1 cap'},
+        ],
+        foods:[
+          {name:'Alien NY Choc Chip Cookie Protein',qty:'40g'},
+          {name:'Chobani No Fat Yoghurt',qty:'200g'},
+          {name:'Frozen Mixed Berries',qty:'150g'},
+          {name:'Peanut Butter (smooth)',qty:'20g'},
+        ],
+        macros:'PRO 40g · CARB 28g · FAT 16g · 412 cal'
+      },
+      {
+        id:'meal2', icon:'🍗', title:'Meal 2', subtitle:'Chicken & Rice',
+        note:'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps:[],
+        foods:[
+          {name:'Chicken Breast (raw weight)',qty:'200g'},
+          {name:'Basmati Rice (raw)',qty:'40g'},
+          {name:'Stir Fry Mixed Vegetables',qty:'150g'},
+          {name:'Olive Oil (cold pressed)',qty:'10ml'},
+        ],
+        macros:'PRO 52g · CARB 38g · FAT 12g · 468 cal'
+      },
+      {
+        id:'meal3', icon:'🥩', title:'Meal 3', subtitle:'Steak & Sweet Potato',
+        note:'Pink salt & pepper / oil as dressing · 1L water · 10 cracks salt',
+        supps:[],
+        foods:[
+          {name:'Lean Beef Rump (no fat, raw)',qty:'200g'},
+          {name:'Sweet Potato',qty:'200g'},
+          {name:'Mixed Greens',qty:'200g'},
+          {name:'Macadamia Nut Oil',qty:'10ml'},
+        ],
+        macros:'PRO 52g · CARB 35g · FAT 18g · 510 cal'
+      },
+      {
+        id:'snack', icon:'🥤', title:'Snack', subtitle:'Cookie Shake',
+        note:'Shake with water — have anytime · 1L water',
+        supps:[{name:'Vitamin C',dose:'2000mg'}],
+        foods:[{name:'Alien NY Choc Chip Cookie Protein',qty:'50g'}],
+        macros:'PRO 29g · CARB 11g · FAT 6g · 210 cal'
+      },
+      {
+        id:'dessert', icon:'🍓', title:'Dessert', subtitle:null,
+        note:'Enjoy every night!!',
+        supps:[
+          {name:'Zinc Picolinate',dose:'30mg'},{name:'Bio Curcumin',dose:'500mg'},
+          {name:'Fish Oil',dose:'1000mg'},{name:'Evening Primrose',dose:'1000mg'},
+        ],
+        foods:[
+          {name:'Strawberries',qty:'150g'},
+          {name:'78% Lindt Dark Chocolate',qty:'2 squares'},
+        ],
+        macros:'PRO 2g · CARB 16g · FAT 6g · 126 cal'
+      },
+    ]
+  }
+};
+
+// ── STATE ──
+let sel = new Date().getDay();
+const sk = d => `supps4_${d}`;
+const wk = d => `water4_${d}`;
+const ld = d => { try { return JSON.parse(localStorage.getItem(sk(d)))||{}; } catch { return {}; } };
+const sd = (d,s) => localStorage.setItem(sk(d), JSON.stringify(s));
+const lw = d => { try { return parseInt(localStorage.getItem(wk(d)))||0; } catch { return 0; } };
+const sw = (d,v) => localStorage.setItem(wk(d), v);
+const key = (d,m,i) => `${d}-${m}-${i}`;
+
+function totalSupps(p) { return PLANS[p].meals.reduce((a,m)=>a+m.supps.length,0); }
+function doneCount(d,p) {
+  const s=ld(d);
+  return PLANS[p].meals.reduce((a,m)=>a+m.supps.filter((_,i)=>s[key(d,m.id,i)]).length,0);
+}
+function nextMeal(d,p) {
+  const s=ld(d);
+  for(const m of PLANS[p].meals) {
+    if(m.supps.length===0) continue;
+    if(!m.supps.every((_,i)=>s[key(d,m.id,i)])) return m;
+  }
+  return null;
+}
+
+// ── RENDER FUNCTIONS ──
+function renderStrip() {
+  const today=new Date().getDay(), strip=document.getElementById('dayStrip');
+  strip.innerHTML='';
+  for(let o=-1;o<=5;o++){
+    const di=((today+o)%7+7)%7, p=getPlan(di);
+    const b=document.createElement('div');
+    b.className=`day-btn ${p}${di===sel?' active':''}`;
+    const lbl=o===-1?'YEST':o===0?'TODAY':o===1?'TMW':DAYS[di];
+    b.innerHTML=`<span class="day-label">${lbl}</span><div class="day-dot"></div>`;
+    b.onclick=()=>{sel=di;render();};
+    strip.appendChild(b);
+  }
+}
+
+function renderHeader() {
+  const p=getPlan(sel), today=new Date().getDay();
+  const badge=document.getElementById('planBadge');
+  badge.className=`plan-badge ${p}`; badge.textContent=PLANS[p].label;
+  const off=((sel-today+7)%7);
+  const sfx=off===0?' · Today':off===1?' · Tomorrow':off===6?' · Yesterday':'';
+  document.getElementById('dayInfo').textContent=FULL_DAYS[sel]+sfx;
+  const total=totalSupps(p), done=doneCount(sel,p), circ=144.5;
+  const ring=document.getElementById('ringFg');
+  ring.style.strokeDashoffset=total?circ-(done/total)*circ:circ;
+  ring.style.stroke=p==='mod'?'#c8f135':'#3bffc8';
+  document.getElementById('ringCount').textContent=`${done}/${total}`;
+}
+
+function renderBanner() {
+  const p=getPlan(sel), nx=nextMeal(sel,p);
+  const total=totalSupps(p), done=doneCount(sel,p);
+  const icons={am:'🌅',meal1:'🥣',meal2:'🍗',meal3:'🥩',intra:'💪',post:'⚡',snack:'🥤',dessert:'🍓'};
+  let html;
+  if(!nx) {
+    html=`<div class="next-banner all-done"><div class="next-icon">✅</div><div>
+      <div class="next-label">Status</div>
+      <div class="next-title">All Done!</div>
+      <div class="next-subtitle">Every supplement taken · ${total}/${total}</div>
+    </div></div>`;
+  } else {
+    html=`<div class="next-banner ${p}"><div class="next-icon">${icons[nx.id]||'💊'}</div><div>
+      <div class="next-label">Next Up</div>
+      <div class="next-title">${nx.title}${nx.subtitle?' — '+nx.subtitle:''}</div>
+      <div class="next-subtitle">${nx.supps.length} supplement${nx.supps.length>1?'s':''} · ${done}/${total} done today</div>
+    </div></div>`;
+  }
+  document.getElementById('nextBanner').innerHTML=html;
+}
+
+function renderWater() {
+  const l=lw(sel);
+  const drops=Array.from({length:4},(_,i)=>
+    `<div class="water-drop${i<l?' filled':''}" onclick="toggleWater(${i})"></div>`).join('');
+  document.getElementById('waterSection').innerHTML=`
+    <div class="water-bar">
+      <div class="water-label"><span>💧 Water Intake</span><span class="water-goal">${l}L / 4L</span></div>
+      <div class="water-track">${drops}</div>
+    </div>`;
+}
+
+function renderMeals() {
+  const p=getPlan(sel), state=ld(sel), nx=nextMeal(sel,p);
+  const total=totalSupps(p), done=doneCount(sel,p);
+  const wrap=document.getElementById('mealsWrap');
+  let html='';
+
+  PLANS[p].meals.forEach(meal=>{
+    const has=meal.supps.length>0;
+    const mDone=has&&meal.supps.every((_,i)=>state[key(sel,meal.id,i)]);
+    const isNext=nx&&nx.id===meal.id;
+
+    let sc,st;
+    if(!has){sc='food-only';st='Food Only';}
+    else if(mDone){sc='done-chip';st='✓ Done';}
+    else if(isNext){sc=`next-chip ${p}`;st='Next Up';}
+    else{sc='pending';st='Pending';}
+
+    let suppsHtml='';
+    if(has){
+      const rows=meal.supps.map((s,i)=>{
+        const k=key(sel,meal.id,i), chk=state[k]?'checked':'';
+        return `<li class="supp-item ${chk}" onclick="toggleSupp('${meal.id}',${i})">
+          <div class="supp-check">${chk?'✓':''}</div>
+          <div class="supp-name">${s.name}</div>
+          <div class="supp-dose">${s.dose}</div>
+        </li>`;
+      }).join('');
+      suppsHtml=`<div class="section-label">Supplements</div><ul class="supp-list">${rows}</ul>`;
+    }
+
+    let foodsHtml='';
+    if(meal.foods&&meal.foods.length){
+      const rows=meal.foods.map(f=>
+        `<div class="food-row"><span class="food-row-name">${f.name}</span><span class="food-row-qty">${f.qty}</span></div>`
+      ).join('');
+      foodsHtml=`<div class="section-label">Ingredients</div>
+        <div class="food-detail">
+          <div class="food-detail-header"><span>Foods</span>${meal.macros?`<span class="food-macros">${meal.macros}</span>`:''}</div>
+          <div>${rows}</div>
+        </div>`;
+    } else if(meal.macros&&!meal.foods) {
+      foodsHtml=`<div class="meal-note" style="margin-top:10px">📊 ${meal.macros}</div>`;
+    }
+
+    const markBtn=has&&!mDone?`<button class="mark-all-btn" onclick="markAll('${meal.id}')">Mark all as taken</button>`:'';
+
+    html+=`<div class="meal-card${mDone?' completed':''}${isNext?' open':''}" id="card-${meal.id}">
+      <div class="meal-header" onclick="toggleCard('${meal.id}')">
+        <div class="meal-icon">${meal.icon}</div>
+        <div class="meal-titlewrap">
+          <div class="meal-title">${meal.title}</div>
+          ${meal.subtitle?`<div class="meal-subtitle">${meal.subtitle}</div>`:''}
+        </div>
+        <div class="meal-status">
+          <div class="status-chip ${sc}">${st}</div>
+          <div class="chevron">▾</div>
+        </div>
+      </div>
+      <div class="meal-body">
+        ${suppsHtml}${foodsHtml}
+        ${meal.note?`<div class="meal-note">📌 ${meal.note}</div>`:''}
+        ${markBtn}
+      </div>
+    </div>`;
+  });
+
+  if(total>0&&done===total){
+    html+=`<div class="all-done-msg">
+      <span class="emoji">🎯</span>
+      <h3>Crushed It!</h3>
+      <p>All supplements taken for ${FULL_DAYS[sel]}</p>
+      <button class="reset-btn" onclick="resetDay()">Reset day</button>
+    </div>`;
+  }
+  wrap.innerHTML=html;
+}
+
+// ── ACTIONS ──
+window.toggleCard=id=>document.getElementById(`card-${id}`).classList.toggle('open');
+window.toggleSupp=(mId,i)=>{
+  const s=ld(sel),k2=key(sel,mId,i);
+  s[k2]=!s[k2]; sd(sel,s); render();
+};
+window.markAll=mId=>{
+  const p=getPlan(sel),meal=PLANS[p].meals.find(m=>m.id===mId),s=ld(sel);
+  meal.supps.forEach((_,i)=>{s[key(sel,mId,i)]=true;}); sd(sel,s); render();
+};
+window.toggleWater=i=>{const c=lw(sel);sw(sel,c===i+1?i:i+1);renderWater();};
+window.resetDay=()=>{sd(sel,{});render();};
+
+function render(){renderStrip();renderHeader();renderBanner();renderWater();renderMeals();}
+render();
+</script>
+</body>
+</html>
